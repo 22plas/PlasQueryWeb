@@ -34,7 +34,7 @@ namespace PlasCommon
         /// <param name="NumPhone"></param>
         /// <param name="validateNum"></param>
 
-        public static void SmsSend(string NumPhone, string validateNum)
+        public static bool SmsSend(string NumPhone, string validateNum)
         {
             IClientProfile profile = DefaultProfile.GetProfile(regionIdForPop, accetKey, accetSerct);
             DefaultProfile.AddEndpoint(regionIdForPop, regionIdForPop, product, domain);
@@ -48,15 +48,27 @@ namespace PlasCommon
                 request.TemplateParam = "{\"code\":\"" + validateNum + "\"}";
                 request.OutId = "";//模板code中定义的参数，可以定义多个，这里我只定义了一个code；validateNum是传进来的验证码，在后端随机生成，可自行处理
                 SendSmsResponse sendSmsResponse = acsClient.GetAcsResponse(request);
+                var status = sendSmsResponse.HttpResponse.Status;
                 System.Console.WriteLine(sendSmsResponse.Message);
+                //成功
+                if (status == 200)
+                {
+                    return true;
+                }
+                else
+                {
+                    return false;
+                }
             }
             catch (ServerException ex)
             {
                 string result = ex.Message;
+                return false;
             }
             catch (ClientException ez)
             {
                 string result = ez.Message;
+                return false;
             }
         }
         #endregion
@@ -207,6 +219,54 @@ namespace PlasCommon
         //}
 
 
+        #endregion
+
+        #region 随机字符串
+        /// <summary>
+        /// 生成指定数量长度的随机字符串
+        /// </summary>
+        /// <param name="codeCount"></param>
+        /// <returns></returns>
+        public static string GenerateCheckCodeNum(int codeCount)
+        {
+            int rep = 0;
+            string str = string.Empty;
+            long num2 = DateTime.Now.Ticks + rep;
+            rep++;
+            Random random = new Random(((int)(((ulong)num2) & 0xffffffffL)) | ((int)(num2 >> rep)));
+            for (int i = 0; i < codeCount; i++)
+            {
+                int num = random.Next();
+                str = str + ((char)(0x30 + ((ushort)(num % 10)))).ToString();
+            }
+            return str;
+        }
+        #endregion
+
+        #region 生成返回结果
+        /// <summary>
+        /// 生成返回结果
+        /// </summary>
+        /// <param name="state">状态</param>
+        /// <param name="message">消息</param>
+        /// <param name="data">数据</param>
+        /// <returns></returns>
+        public static Dictionary<string, object> ToJsonResult(string state, string message, object data = null)
+        {
+            Dictionary<string, object> result = new Dictionary<string, object>();
+            result.Add("State", state);
+            result.Add("Message", message);
+            result.Add("Result", data);
+            //if (data != null)
+            //{
+            //    foreach (var item in data.GetType().GetProperties())
+            //    {
+            //        result.Add(item.Name, item.GetValue(data));
+            //    }
+            //}
+
+            return result;
+        }
         #endregion
     }
 }
