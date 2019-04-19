@@ -11,6 +11,7 @@ namespace PlasQueryWeb.Controllers
         // GET: 物料对比
         public ActionResult Index()
         {
+
             return View();
         }
     }
